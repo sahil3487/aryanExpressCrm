@@ -6,7 +6,7 @@ import Image from "next/image";
 import SidebarItem from "@/components/Sidebar/SidebarItem";
 import ClickOutside from "@/components/ClickOutside";
 import useLocalStorage from "@/hooks/useLocalStorage";
-import Employee from '../../app/employee/page'
+import Employee from "../../app/employee/page";
 interface SidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (arg: boolean) => void;
@@ -47,7 +47,7 @@ const menuGroups = [
         route: "#",
         children: [{ label: "", route: "/" }],
       },
-      
+
       {
         icon: (
           <svg
@@ -78,7 +78,10 @@ const menuGroups = [
         ),
         label: "Employee Management",
         route: "#",
-        children: [{ label: "Employee List", route: "/employee" }, { label: "Employee Roles", route: "/" }],
+        children: [
+          { label: "Employee List", route: "/employee/employeeList" },
+          { label: "Employee Roles", route: "/" },
+        ],
       },
       {
         icon: (
@@ -142,7 +145,10 @@ const menuGroups = [
         ),
         label: "Lead management",
         route: "#",
-        children: [{ label: "Lead Manage", route: "/" }, { label: "Update Lead status", route: "/" }],
+        children: [
+          { label: "Lead Manage", route: "/" },
+          { label: "Update Lead status", route: "/" },
+        ],
       },
       {
         icon: (
@@ -174,7 +180,10 @@ const menuGroups = [
         ),
         label: "Contract Mangement ",
         route: "#",
-        children: [{ label: "Add Contract", route: "/" }, { label: "Send Contract", route: "/" }],
+        children: [
+          { label: "Add Contract", route: "/" },
+          { label: "Send Contract", route: "/" },
+        ],
       },
       {
         icon: (
@@ -206,7 +215,10 @@ const menuGroups = [
         ),
         label: "Expenses Management",
         route: "#",
-        children: [{ label: "Add Catagory", route: "/" },{ label: "Send Expense", route: "/" }],
+        children: [
+          { label: "Add Catagory", route: "/" },
+          { label: "Send Expense", route: "/" },
+        ],
       },
       {
         icon: (
@@ -270,9 +282,14 @@ const menuGroups = [
         ),
         label: "Attendance & Leave Management",
         route: "#",
-        children: [{ label: " Manage Attendance ", route: "/" }, { label: "Manage Leave", route: "/" }, { label: " Payroll Manange employee", route: "/" }, { label: "Payroll Manange Freelancer", route: "/" }],
+        children: [
+          { label: " Manage Attendance ", route: "/" },
+          { label: "Manage Leave", route: "/" },
+          { label: " Payroll Manange employee", route: "/" },
+          { label: "Payroll Manange Freelancer", route: "/" },
+        ],
       },
-       {
+      {
         icon: (
           <svg
             className="fill-current"
@@ -302,7 +319,7 @@ const menuGroups = [
         ),
         label: "Ticket Management",
         route: "#",
-        children: [{ label: " Tickets ", route: "/" },],
+        children: [{ label: " Tickets ", route: "/" }],
       },
       {
         icon: (
@@ -334,7 +351,10 @@ const menuGroups = [
         ),
         label: "Proposal",
         route: "#",
-        children: [{ label: "Add Proposal", route: "/" },{ label: "Send proposal", route: "/" }],
+        children: [
+          { label: "Add Proposal", route: "/" },
+          { label: "Send proposal", route: "/" },
+        ],
       },
       {
         icon: (
@@ -366,7 +386,11 @@ const menuGroups = [
         ),
         label: "Report Management",
         route: "#",
-        children: [{ label: "Vendor report", route: "/" },{ label: "payment Report", route: "/" },{ label: "Revenue", route: "/" }],
+        children: [
+          { label: "Vendor report", route: "/" },
+          { label: "payment Report", route: "/" },
+          { label: "Revenue", route: "/" },
+        ],
       },
       {
         icon: (
@@ -398,7 +422,7 @@ const menuGroups = [
         ),
         label: "Reception Data",
         route: "#",
-        children: [{ label: "Add person", route: "/" },],
+        children: [{ label: "Add person", route: "/" }],
       },
       {
         icon: (
@@ -430,7 +454,10 @@ const menuGroups = [
         ),
         label: "Docment management",
         route: "#",
-        children: [{ label: "add category", route: "/" },{ label: "Add Document", route: "/" }],
+        children: [
+          { label: "add category", route: "/" },
+          { label: "Add Document", route: "/" },
+        ],
       },
       {
         icon: (
@@ -462,7 +489,10 @@ const menuGroups = [
         ),
         label: "Goal Management",
         route: "#",
-        children: [{ label: " Goal Assign", route: "/" }, { label: "Goal Achievement", route: "/" }],
+        children: [
+          { label: " Goal Assign", route: "/" },
+          { label: "Goal Achievement", route: "/" },
+        ],
       },
       {
         icon: (
@@ -494,7 +524,7 @@ const menuGroups = [
         ),
         label: "Announcement",
         route: "#",
-        children: [{ label: " Office notifaction", route: "/" },],
+        children: [{ label: " Office notifaction", route: "/" }],
       },
       {
         icon: (
@@ -526,7 +556,10 @@ const menuGroups = [
         ),
         label: "Inventory Management",
         route: "#",
-        children: [{ label: " Category", route: "/" },{ label: "Add product", route: "/" }],
+        children: [
+          { label: " Category", route: "/" },
+          { label: "Add product", route: "/" },
+        ],
       },
       {
         icon: (
@@ -806,8 +839,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   return (
     <ClickOutside onClick={() => setSidebarOpen(false)}>
       <aside
-        className={`fixed left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+        className={`fixed left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
         {/* <!-- SIDEBAR HEADER --> */}
         <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">

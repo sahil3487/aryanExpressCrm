@@ -2,9 +2,12 @@ const express = require('express');
 const Employee = require('../models/employeemodel');
 const catchAsyncErrors = require('../middleware/catchAsyncErrors');
 const mongoose = require('mongoose');
+const files =  require('../config/multer')
 
 
 //! Register Employee Api 
+
+
 
 exports.registerEmployee = catchAsyncErrors(async (req, res, next) => {
     const {
@@ -14,8 +17,8 @@ exports.registerEmployee = catchAsyncErrors(async (req, res, next) => {
         password,
         confirmPassword,
         mobile,
-        currentaddress,
-        permanentaddress,
+        currentAddress,
+        permanentAddress,
         role,
         branch,
         location,
@@ -24,14 +27,21 @@ exports.registerEmployee = catchAsyncErrors(async (req, res, next) => {
         amount,
         payDate,
         accountNumber,
-        ifsc
+        ifsc,
+        bankName,
+        bankBranch,
+        accountName,
+        companyEmail,
+        companyMobile,
+        gendar,
+        taxPayerId
     } = req.body;
 
     // Log request body for debugging
     console.log("Request Body:", req.body);
 
     // Validate required fields
-    if (!firstname || !lastname || !email || !password || !confirmPassword || !mobile || !currentaddress || !permanentaddress || !role || !branch || !location || !identityType || !identityNumber || !amount || !payDate || !accountNumber || !ifsc) {
+    if (!firstname || !lastname || !email || !password || !confirmPassword || !mobile || !currentAddress || !permanentAddress || !role || !branch || !location || !identityType || !identityNumber || !amount || !payDate || !accountNumber || !ifsc || !bankName || !bankBranch || !accountName || !companyEmail || !companyMobile) {
         return res.status(400).json({
             success: false,
             message: 'All fields are required',
@@ -55,15 +65,24 @@ exports.registerEmployee = catchAsyncErrors(async (req, res, next) => {
         });
     }
 
+    // Check if mobile number already exists
+    const existingMobile = await Employee.findOne({ mobile });
+    if (existingMobile) {
+        return res.status(400).json({
+            success: false,
+            message: 'Mobile number already in use',
+        });
+    }
+
     // Create new employee
-    const employee = await Employee.create({
+    const employee = new Employee({
         firstname,
         lastname,
         email,
         password,
         mobile,
-        currentaddress,
-        permanentaddress,
+        currentAddress,
+        permanentAddress,
         role,
         branch,
         location,
@@ -72,8 +91,25 @@ exports.registerEmployee = catchAsyncErrors(async (req, res, next) => {
         amount,
         payDate,
         accountNumber,
-        ifsc
+        ifsc,
+        bankName,
+        bankBranch,
+        accountName,
+        companyEmail,
+        companyMobile,
+        gendar,
+        taxPayerId
     });
+
+    // Update employee with uploaded documents if present
+    if (req.files && req.files['aadharDocument']) {
+        employee.aadharDocument = req.files['aadharDocument'][0].path; // Save file path or URL
+    }
+    if (req.files && req.files['panCardDocument']) {
+        employee.panCardDocument = req.files['panCardDocument'][0].path; // Save file path or URL
+    }
+
+    await employee.save();
 
     res.status(201).json({
         success: true,

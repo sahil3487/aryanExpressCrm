@@ -1,30 +1,22 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+import { useState, useEffect } from "react";
+import DefaultLayout from "../../../components/Layouts/DefaultLayout";
 import axios from "axios";
-import Link from "next/link";
 import flatpickr from "flatpickr";
-import { tree } from "next/dist/build/templates/app-page";
-
+import "flatpickr/dist/flatpickr.min.css"; // Import Flatpickr CSS
 const EmployeeRegister = () => {
   const [gender, setGender] = useState<string>("");
-
   //? this is select for branch
   const [selectedOption, setSelectedOption] = useState<string>("");
   const [isOptionSelected, setIsOptionSelected] = useState<boolean>(false);
-
   //? select Department
   const [selectedDeparment, setSelectedDepartment] = useState<string>("");
   const [isDepartmentSelected, setIsDepartmentSelected] =
     useState<boolean>(false);
-
   //? select Department
   const [selectedDagination, setSelectedDagination] = useState<string>("");
   const [isDaginationSelected, setIsDeginationSelected] =
     useState<boolean>(false);
-
-  //?
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -34,7 +26,7 @@ const EmployeeRegister = () => {
     mobile: "",
     currentAddress: "",
     permanentAddress: "",
-    role: "",
+    role: "tl",
     branch: "",
     location: "",
     identityType: "",
@@ -46,34 +38,44 @@ const EmployeeRegister = () => {
     ifsc: "",
     bankName: "",
     bankBranch: "",
-    aadharDocument: "",
-    panCardDocument: "",
+    aadharDocument: null,
+    panCardDocument: null,
+    gender: "",
+    taxPayerId: "", // Add gender field
   });
-
-  const handleChange = (e) => {
+  const changeTextColor = () => {
+    setIsOptionSelected(true);
+    setIsDepartmentSelected(true);
+    setIsDeginationSelected(true);
+  };
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
       [name]: value,
     }));
   };
-
-  const handleFileChange = (e) => {
+  const handleFileChange = (e: any) => {
     const { name, files } = e.target;
     if (files.length > 0) {
       const file = files[0];
-      // For file preview or uploading:
       setFormData((prevState) => ({
         ...prevState,
-        [name]: URL.createObjectURL(file), // Store the URL for preview
+        [name]: file, // Store the file itself
       }));
     }
   };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-
-    // Validate formData before submitting
+    try {
+      const response = await axios.post(
+        "http://localhost:3001/api/v1/registerEmployee",
+        formData,
+      );
+      console.log("Employee registered successfully:", response.data);
+    } catch (error) {
+      console.error("Error registering employee:", error);
+    }
     const requiredFields = [
       "firstname",
       "lastname",
@@ -97,31 +99,38 @@ const EmployeeRegister = () => {
       "bankBranch",
       "aadharDocument",
       "panCardDocument",
+      "gender",
+      "taxPayerId", // Ensure gender is checked
     ];
-
     for (let field of requiredFields) {
       if (!formData[field]) {
         console.error(`${field} is required.`);
         return;
       }
     }
-
     if (formData.password !== formData.confirmPassword) {
       console.error("Passwords do not match.");
       return;
     }
-
+    const formDataToSend = new FormData();
+    for (let key in formData) {
+      formDataToSend.append(key, formData[key]);
+    }
     try {
       const response = await axios.post(
         "http://localhost:3001/api/v1/registerEmployee",
-        formData,
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
       );
       console.log("Employee registered successfully:", response.data);
     } catch (error) {
       console.error("Error registering employee:", error);
     }
   };
-
   const handleReset = () => {
     setFormData({
       firstname: "",
@@ -144,17 +153,12 @@ const EmployeeRegister = () => {
       ifsc: "",
       bankName: "",
       bankBranch: "",
-      aadharDocument: "",
-      panCardDocument: "",
+      aadharDocument: null,
+      panCardDocument: null,
+      gender: "",
+      taxPayerId: "",
     });
   };
-
-  const changeTextColor = () => {
-    setIsOptionSelected(true);
-    setIsDepartmentSelected(true);
-    setIsDesignationSelected(true);
-  };
-
   useEffect(() => {
     // Initialize flatpickr
     flatpickr(".form-datepicker", {
@@ -168,6 +172,7 @@ const EmployeeRegister = () => {
         '<svg className="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M1.4 10.8L0 9.4l4-4-4-4L1.4 0l5.4 5.4z" /></svg>',
     });
   }, []);
+
   return (
     <DefaultLayout>
       <div className="top_item mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"></div>
@@ -245,17 +250,19 @@ const EmployeeRegister = () => {
                             type="radio"
                             id="radioMale"
                             name="gender"
+                            value="Male"
                             className="sr-only"
-                            onChange={() => setGender("Male")}
+                            checked={formData.gender === "Male"}
+                            onChange={handleChange}
                           />
                           <div
                             className={`mr-1 flex h-5 w-5 items-center justify-center rounded-full border ${
-                              gender === "Male" && "border-primary"
+                              formData.gender === "Male" ? "border-primary" : ""
                             }`}
                           >
                             <span
                               className={`h-2.5 w-2.5 rounded-full bg-transparent ${
-                                gender === "Male" && "!bg-primary"
+                                formData.gender === "Male" ? "!bg-primary" : ""
                               }`}
                             ></span>
                           </div>
@@ -271,17 +278,23 @@ const EmployeeRegister = () => {
                             type="radio"
                             id="radioFemale"
                             name="gender"
+                            value="Female"
                             className="sr-only"
-                            onChange={() => setGender("Female")}
+                            checked={formData.gender === "Female"}
+                            onChange={handleChange}
                           />
                           <div
                             className={`mr-1 flex h-5 w-5 items-center justify-center rounded-full border ${
-                              gender === "Female" && "border-primary"
+                              formData.gender === "Female"
+                                ? "border-primary"
+                                : ""
                             }`}
                           >
                             <span
                               className={`h-2.5 w-2.5 rounded-full bg-transparent ${
-                                gender === "Female" && "!bg-primary"
+                                formData.gender === "Female"
+                                  ? "!bg-primary"
+                                  : ""
                               }`}
                             ></span>
                           </div>
@@ -344,7 +357,7 @@ const EmployeeRegister = () => {
                   <input
                     name="currentaddress"
                     placeholder="Current Address"
-                    value={formData.currentaddress}
+                    value={formData.currentAddress}
                     onChange={handleChange}
                     className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                   />
@@ -357,7 +370,7 @@ const EmployeeRegister = () => {
                   <input
                     name="permanentaddress"
                     placeholder="Permanent Address"
-                    value={formData.permanentaddress}
+                    value={formData.permanentAddress}
                     onChange={handleChange}
                     className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                   />
@@ -375,244 +388,260 @@ const EmployeeRegister = () => {
               </div>
 
               <div className="p-6.5" style={{ height: "76vh" }}>
-  <div className="mb-4.5">
-    <label className="mb-3 block text-sm font-medium text-black dark:text-white">
-      Employee ID
-    </label>
-    <input
-      type="text"
-      placeholder="#EMP0000014"
-      disabled
-      className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-white dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary dark:disabled:bg-black"
-    />
-  </div>
+                <div className="mb-4.5">
+                  <label className="mb-3 block text-sm font-medium text-black dark:text-white">
+                    Employee ID
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="#EMP0000014"
+                    disabled
+                    className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-white dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary dark:disabled:bg-black"
+                  />
+                </div>
 
-  <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
-    <div className="w-full xl:w-1/2">
-      <label className="mb-2.5 block text-black dark:text-white">
-        Select Branch
-      </label>
-      <div className="relative z-20 bg-transparent dark:bg-form-input">
-        <select
-          value={selectedOption}
-          onChange={(e) => {
-            setSelectedOption(e.target.value);
-            changeTextColor();
-          }}
-          className={`relative z-20 w-full appearance-none rounded border border-stroke bg-transparent px-5 py-3 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary ${
-            isOptionSelected ? "text-black dark:text-white" : ""
-          }`}
-        >
-          <option value="" disabled className="text-body dark:text-bodydark">
-            Select Branch
-          </option>
-          <option value="Nagpur Maharastra" className="text-body dark:text-bodydark">
-            Nagpur Maharastra
-          </option>
-          <option value="Bhopal Madhya Pradesh" className="text-body dark:text-bodydark">
-            Bhopal Madhya Pradesh
-          </option>
-        </select>
-        <span className="absolute right-4 top-1/2 z-30 -translate-y-1/2">
-          <svg
-            className="fill-current"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <g opacity="0.8">
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M5.29289 8.29289C5.68342 7.90237 6.31658 7.90237 6.70711 8.29289L12 13.5858L17.2929 8.29289C17.6834 7.90237 18.3166 7.90237 18.7071 8.29289C19.0976 8.68342 19.0976 9.31658 18.7071 9.70711L12.7071 15.7071C12.3166 16.0976 11.6834 16.0976 11.2929 15.7071L5.29289 9.70711C4.90237 9.31658 4.90237 8.68342 5.29289 8.29289Z"
-                fill=""
-              ></path>
-            </g>
-          </svg>
-        </span>
-      </div>
-    </div>
+                <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
+                  <div className="w-full xl:w-1/2">
+                    <label className="mb-2.5 block text-black dark:text-white">
+                      Select Branch
+                    </label>
+                    <div className="relative z-20 bg-transparent dark:bg-form-input">
+                      <select
+                        value={selectedOption}
+                        onChange={(e) => {
+                          setSelectedOption(e.target.value);
+                          changeTextColor();
+                        }}
+                        className={`relative z-20 w-full appearance-none rounded border border-stroke bg-transparent px-5 py-3 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary ${
+                          isOptionSelected ? "text-black dark:text-white" : ""
+                        }`}
+                      >
+                        <option
+                          value=""
+                          disabled
+                          className="text-body dark:text-bodydark"
+                        >
+                          Select Branch
+                        </option>
+                        <option
+                          value="Nagpur Maharastra"
+                          className="text-body dark:text-bodydark"
+                        >
+                          Nagpur Maharastra
+                        </option>
+                        <option
+                          value="Bhopal Madhya Pradesh"
+                          className="text-body dark:text-bodydark"
+                        >
+                          Bhopal Madhya Pradesh
+                        </option>
+                      </select>
+                      <span className="absolute right-4 top-1/2 z-30 -translate-y-1/2">
+                        <svg
+                          className="fill-current"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <g opacity="0.8">
+                            <path
+                              fillRule="evenodd"
+                              clipRule="evenodd"
+                              d="M5.29289 8.29289C5.68342 7.90237 6.31658 7.90237 6.70711 8.29289L12 13.5858L17.2929 8.29289C17.6834 7.90237 18.3166 7.90237 18.7071 8.29289C19.0976 8.68342 19.0976 9.31658 18.7071 9.70711L12.7071 15.7071C12.3166 16.0976 11.6834 16.0976 11.2929 15.7071L5.29289 9.70711C4.90237 9.31658 4.90237 8.68342 5.29289 8.29289Z"
+                              fill=""
+                            ></path>
+                          </g>
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
 
-    <div className="w-full xl:w-1/2">
-      <label className="mb-2.5 block text-black dark:text-white">
-        Department
-      </label>
-      <div className="relative z-20 bg-transparent dark:bg-form-input">
-        <select
-          value={selectedDeparment}
-          onChange={(e) => {
-            setSelectedDepartment(e.target.value);
-            changeTextColor();
-          }}
-          className={`relative z-20 w-full appearance-none rounded border border-stroke bg-transparent px-5 py-3 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary ${
-            isDepartmentSelected ? "text-black dark:text-white" : ""
-          }`}
-        >
-          <option value="">Select a Department</option>
-          <option value="operations">Operations</option>
-          <option value="transportation">Transportation</option>
-          <option value="warehouseManagement">Warehouse Management</option>
-          <option value="supplyChainManagement">Supply Chain Management</option>
-          <option value="customerService">Customer Service</option>
-          <option value="salesMarketing">Sales and Marketing</option>
-          <option value="hr">Human Resources (HR)</option>
-          <option value="financeAccounting">Finance and Accounting</option>
-          <option value="itSystems">IT and Systems</option>
-          <option value="qualityControl">Quality Control</option>
-          <option value="legalCompliance">Legal and Compliance</option>
-          <option value="procurement">Procurement</option>
-          <option value="riskManagement">Risk Management</option>
-        </select>
-        <span className="absolute right-4 top-1/2 z-30 -translate-y-1/2">
-          <svg
-            className="fill-current"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <g opacity="0.8">
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M5.29289 8.29289C5.68342 7.90237 6.31658 7.90237 6.70711 8.29289L12 13.5858L17.2929 8.29289C17.6834 7.90237 18.3166 7.90237 18.7071 8.29289C19.0976 8.68342 19.0976 9.31658 18.7071 9.70711L12.7071 15.7071C12.3166 16.0976 11.6834 16.0976 11.2929 15.7071L5.29289 9.70711C4.90237 9.31658 4.90237 8.68342 5.29289 8.29289Z"
-                fill=""
-              ></path>
-            </g>
-          </svg>
-        </span>
-      </div>
-    </div>
-  </div>
+                  <div className="w-full xl:w-1/2">
+                    <label className="mb-2.5 block text-black dark:text-white">
+                      Department
+                    </label>
+                    <div className="relative z-20 bg-transparent dark:bg-form-input">
+                      <select
+                        value={selectedDeparment}
+                        onChange={(e) => {
+                          setSelectedDepartment(e.target.value);
+                          changeTextColor();
+                        }}
+                        className={`relative z-20 w-full appearance-none rounded border border-stroke bg-transparent px-5 py-3 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary ${
+                          isDepartmentSelected
+                            ? "text-black dark:text-white"
+                            : ""
+                        }`}
+                      >
+                        <option value="">Select a Department</option>
+                        <option value="operations">Operations</option>
+                        <option value="transportation">Transportation</option>
+                        <option value="warehouseManagement">
+                          Warehouse Management
+                        </option>
+                        <option value="supplyChainManagement">
+                          Supply Chain Management
+                        </option>
+                        <option value="customerService">
+                          Customer Service
+                        </option>
+                        <option value="salesMarketing">
+                          Sales and Marketing
+                        </option>
+                        <option value="hr">Human Resources (HR)</option>
+                        <option value="financeAccounting">
+                          Finance and Accounting
+                        </option>
+                        <option value="itSystems">IT and Systems</option>
+                        <option value="qualityControl">Quality Control</option>
+                        <option value="legalCompliance">
+                          Legal and Compliance
+                        </option>
+                        <option value="procurement">Procurement</option>
+                        <option value="riskManagement">Risk Management</option>
+                      </select>
+                      <span className="absolute right-4 top-1/2 z-30 -translate-y-1/2">
+                        <svg
+                          className="fill-current"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <g opacity="0.8">
+                            <path
+                              fillRule="evenodd"
+                              clipRule="evenodd"
+                              d="M5.29289 8.29289C5.68342 7.90237 6.31658 7.90237 6.70711 8.29289L12 13.5858L17.2929 8.29289C17.6834 7.90237 18.3166 7.90237 18.7071 8.29289C19.0976 8.68342 19.0976 9.31658 18.7071 9.70711L12.7071 15.7071C12.3166 16.0976 11.6834 16.0976 11.2929 15.7071L5.29289 9.70711C4.90237 9.31658 4.90237 8.68342 5.29289 8.29289Z"
+                              fill=""
+                            ></path>
+                          </g>
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-  <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
-    <div className="w-full xl:w-1/2">
-      <label className="mb-2.5 block text-black dark:text-white">
-        Select Designation
-      </label>
-      <div className="relative z-20 bg-transparent dark:bg-form-input">
-        <select
-          value={selectedDagination}
-          onChange={(e) => {
-            setSelectedDesignation(e.target.value);
-            changeTextColor();
-          }}
-          className={`relative z-20 w-full appearance-none rounded border border-stroke bg-transparent px-5 py-3 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary ${
-            isDaginationSelected ? "text-black dark:text-white" : ""
-          }`}
-        >
-          <option value="" disabled className="text-body dark:text-bodydark">
-            Select Designation
-          </option>
-          <option value="logisticsManager">Logistics Manager</option>
-          <option value="operationsManager">Operations Manager</option>
-          <option value="transportationManager">Transportation Manager</option>
-          <option value="warehouseSupervisor">Warehouse Supervisor</option>
-          <option value="supplyChainAnalyst">Supply Chain Analyst</option>
-          <option value="customerServiceManager">Customer Service Manager</option>
-          <option value="salesExecutive">Sales Executive</option>
-          <option value="marketingManager">Marketing Manager</option>
-          <option value="hrManager">HR Manager</option>
-          <option value="financeManager">Finance Manager</option>
-          <option value="accountant">Accountant</option>
-          <option value="itManager">IT Manager</option>
-          <option value="qualityControlInspector">Quality Control Inspector</option>
-          <option value="legalAdvisor">Legal Advisor</option>
-          <option value="complianceOfficer">Compliance Officer</option>
-          <option value="procurementOfficer">Procurement Officer</option>
-          <option value="riskManager">Risk Manager</option>
-          <option value="inventoryManager">Inventory Manager</option>
-          <option value="fleetManager">Fleet Manager</option>
-          <option value="dispatchCoordinator">Dispatch Coordinator</option>
-        </select>
-        <span className="absolute right-4 top-1/2 z-30 -translate-y-1/2">
-          <svg
-            className="fill-current"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <g opacity="0.8">
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M5.29289 8.29289C5.68342 7.90237 6.31658 7.90237 6.70711 8.29289L12 13.5858L17.2929 8.29289C17.6834 7.90237 18.3166 7.90237 18.7071 8.29289C19.0976 8.68342 19.0976 9.31658 18.7071 9.70711L12.7071 15.7071C12.3166 16.0976 11.6834 16.0976 11.2929 15.7071L5.29289 9.70711C4.90237 9.31658 4.90237 8.68342 5.29289 8.29289Z"
-                fill=""
-              ></path>
-            </g>
-          </svg>
-        </span>
-      </div>
-    </div>
-    
-    <div className="w-full xl:w-1/2">
-      <label className="mb-2.5 block text-black dark:text-white">
-        Gender
-      </label>
-      <div className="relative z-20 bg-transparent dark:bg-form-input">
-        <select
-          value={setGender}
-          onChange={(e) => setSelectedGender(e.target.value)}
-          className="relative z-20 w-full appearance-none rounded border border-stroke bg-transparent px-5 py-3 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
-        >
-          <option value="" disabled>Select Gender</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-        </select>
-        <span className="absolute right-4 top-1/2 z-30 -translate-y-1/2">
-          <svg
-            className="fill-current"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <g opacity="0.8">
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M5.29289 8.29289C5.68342 7.90237 6.31658 7.90237 6.70711 8.29289L12 13.5858L17.2929 8.29289C17.6834 7.90237 18.3166 7.90237 18.7071 8.29289C19.0976 8.68342 19.0976 9.31658 18.7071 9.70711L12.7071 15.7071C12.3166 16.0976 11.6834 16.0976 11.2929 15.7071L5.29289 9.70711C4.90237 9.31658 4.90237 8.68342 5.29289 8.29289Z"
-                fill=""
-              ></path>
-            </g>
-          </svg>
-        </span>
-      </div>
-    </div>
-  </div>
-  
-  <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
-    <div className="w-full xl:w-1/2">
-      <label className="mb-2.5 block text-black dark:text-white">
-        Email Address
-      </label>
-      <input
-        type="email"
-        placeholder="example@example.com"
-        className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-      />
-    </div>
+                <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
+                  <div className="w-full xl:w-1/2">
+                    <label className="mb-2.5 block text-black dark:text-white">
+                      Select Designation
+                    </label>
+                    <div className="relative z-20 bg-transparent dark:bg-form-input">
+                      <select
+                        value={selectedDagination}
+                        onChange={(e) => {
+                          setSelectedDagination(e.target.value);
+                          changeTextColor();
+                        }}
+                        className={`relative z-20 w-full appearance-none rounded border border-stroke bg-transparent px-5 py-3 outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary ${
+                          isDaginationSelected
+                            ? "text-black dark:text-white"
+                            : ""
+                        }`}
+                      >
+                        <option
+                          value=""
+                          disabled
+                          className="text-body dark:text-bodydark"
+                        >
+                          Select Designation
+                        </option>
+                        <option value="logisticsManager">
+                          Logistics Manager
+                        </option>
+                        <option value="operationsManager">
+                          Operations Manager
+                        </option>
+                        <option value="transportationManager">
+                          Transportation Manager
+                        </option>
+                        <option value="warehouseSupervisor">
+                          Warehouse Supervisor
+                        </option>
+                        <option value="supplyChainAnalyst">
+                          Supply Chain Analyst
+                        </option>
+                        <option value="customerServiceManager">
+                          Customer Service Manager
+                        </option>
+                        <option value="salesExecutive">Sales Executive</option>
+                        <option value="marketingManager">
+                          Marketing Manager
+                        </option>
+                        <option value="hrManager">HR Manager</option>
+                        <option value="financeManager">Finance Manager</option>
+                        <option value="accountant">Accountant</option>
+                        <option value="itManager">IT Manager</option>
+                        <option value="qualityControlInspector">
+                          Quality Control Inspector
+                        </option>
+                        <option value="legalAdvisor">Legal Advisor</option>
+                        <option value="complianceOfficer">
+                          Compliance Officer
+                        </option>
+                        <option value="procurementOfficer">
+                          Procurement Officer
+                        </option>
+                        <option value="riskManager">Risk Manager</option>
+                        <option value="inventoryManager">
+                          Inventory Manager
+                        </option>
+                        <option value="fleetManager">Fleet Manager</option>
+                        <option value="dispatchCoordinator">
+                          Dispatch Coordinator
+                        </option>
+                      </select>
+                      <span className="absolute right-4 top-1/2 z-30 -translate-y-1/2">
+                        <svg
+                          className="fill-current"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <g opacity="0.8">
+                            <path
+                              fillRule="evenodd"
+                              clipRule="evenodd"
+                              d="M5.29289 8.29289C5.68342 7.90237 6.31658 7.90237 6.70711 8.29289L12 13.5858L17.2929 8.29289C17.6834 7.90237 18.3166 7.90237 18.7071 8.29289C19.0976 8.68342 19.0976 9.31658 18.7071 9.70711L12.7071 15.7071C12.3166 16.0976 11.6834 16.0976 11.2929 15.7071L5.29289 9.70711C4.90237 9.31658 4.90237 8.68342 5.29289 8.29289Z"
+                              fill=""
+                            ></path>
+                          </g>
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-    <div className="w-full xl:w-1/2">
-      <label className="mb-2.5 block text-black dark:text-white">
-        Contact Number
-      </label>
-      <input
-        type="text"
-        placeholder="1234567890"
-        className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-      />
-    </div>
-  </div>
-</div>
+                <div className="mb-4.5 flex flex-col gap-6 xl:flex-row">
+                  <div className="w-full xl:w-1/2">
+                    <label className="mb-2.5 block text-black dark:text-white">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="example@example.com"
+                      className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                    />
+                  </div>
 
+                  <div className="w-full xl:w-1/2">
+                    <label className="mb-2.5 block text-black dark:text-white">
+                      Contact Number
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="1234567890"
+                      className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -835,5 +864,4 @@ const EmployeeRegister = () => {
     </DefaultLayout>
   );
 };
-
 export default EmployeeRegister;
